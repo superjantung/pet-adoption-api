@@ -8,15 +8,31 @@ import (
 	"github.com/superjantung/pet-adoption-api/models"
 )
 
-type PetsResponse struct {
-	Data []models.Pet `json:"data"`
-}
-
 type CreatePetInput struct {
 	Name                 string   `json:"name" binding:"required"`
 	Species              string   `json:"species" binding:"required"`
 	Breed                string   `json:"breed" binding:"required"`
 	Age                  int      `json:"age" binding:"required"`
+	Gender               string   `json:"gender"`
+	Size                 string   `json:"size"`
+	Color                string   `json:"color"`
+	Weight               float64  `json:"weight"`
+	Description          string   `json:"description"`
+	Photos               []string `json:"photos"`
+	Availability         bool     `json:"availability"`
+	Location             string   `json:"location"`
+	Vaccinated           bool     `json:"vaccinated"`
+	MedicalHistory       string   `json:"medical_history"`
+	SpecialNeeds         string   `json:"special_needs"`
+	AdoptionStatus       string   `json:"adoption_status"`
+	AdoptionFee          float64  `json:"adoption_fee"`
+	AdoptionRequirements string   `json:"adoption_requirements"`
+}
+type UpdatePetInput struct {
+	Name                 string   `json:"name"`
+	Species              string   `json:"species"`
+	Breed                string   `json:"breed"`
+	Age                  int      `json:"age"`
 	Gender               string   `json:"gender"`
 	Size                 string   `json:"size"`
 	Color                string   `json:"color"`
@@ -40,10 +56,7 @@ func FindPets(c *gin.Context) {
 		return
 	}
 
-	response := PetsResponse{
-		Data: pets,
-	}
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, gin.H{"data": pets})
 }
 
 func FindPet(c *gin.Context) {
@@ -63,6 +76,7 @@ func FindPet(c *gin.Context) {
 
 func CreatePet(c *gin.Context) {
 	var input CreatePetInput
+
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -97,4 +111,42 @@ func CreatePet(c *gin.Context) {
 		"data":    pet,
 		"message": "Pet created successfully",
 	})
+}
+
+func UpdatePet(c *gin.Context) {
+	var pet models.Pet
+
+	if err := models.DB.Find(&pet, c.Param("id")).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
+		return
+	}
+
+	var input UpdatePetInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := models.DB.Model(&pet).Updates(input).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update pet"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": pet})
+}
+
+func DeletePet(c *gin.Context) {
+
+	var pet models.Pet
+	if err := models.DB.Where("id = ?", c.Param("id")).First(&pet).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
+		return
+	}
+
+	if err := models.DB.Delete(&pet).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete pet"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": true})
 }

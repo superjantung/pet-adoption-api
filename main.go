@@ -35,6 +35,14 @@ func main() {
 	r.GET("/pets", controllers.FindPets)
 	r.GET("/pets/:id", controllers.FindPet)
 	r.POST("/pets", controllers.CreatePet)
+	r.PATCH("/pets/:id", controllers.UpdatePet)
+	r.DELETE("/pets/:id", controllers.DeletePet)
+
+	r.GET("/adopters", controllers.FindAdopters)
+	r.GET("/adopters/:id", controllers.FindAdopter)
+	r.POST("/adopters", controllers.CreateAdopter)
+	r.PATCH("/adopters/:id", controllers.UpdateAdopter)
+	r.DELETE("/adopters/:id", controllers.DeleteAdopter)
 
 	serverAddress := os.Getenv("SERVER_ADDRESS")
 	if serverAddress == "" {
